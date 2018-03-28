@@ -87,7 +87,7 @@
       (mirror false)
       (drillshape 0)
       (scaleselection 1)
-      (outputdirectory magstock2018-reva))
+      (outputdirectory magstock2018-reva1))
   )
 
   (net 0 "")

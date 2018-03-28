@@ -2245,7 +2245,7 @@
   (gr_text "120DPI\n" (at 210.44 58.8) (layer F.Fab)
     (effects (font (size 1.5 1.5) (thickness 0.3)))
   )
-  (gr_text "NOTE: Top of wagon should physically be canvas." (at 49.5 20.445) (layer F.Fab)
+  (gr_text "NOTE: Top of wagon should physically be canvas." (at 134.62 24.892) (layer F.Fab)
     (effects (font (size 1.5 1.5) (thickness 0.3)))
   )
 
