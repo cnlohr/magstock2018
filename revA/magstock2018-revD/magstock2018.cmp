@@ -1,0 +1,387 @@
+Cmp-Mod V01 Created by PcbNew   date = Fri 20 Apr 2018 01:20:05 AM EDT
+
+BeginCmp
+TimeStamp = 5AD1455B
+Path = 
+Reference = REF**;
+ValeurCmp = 1pin;
+IdModule  = Connect:1pin;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ABB1FF7
+Path = /5AB9B644
+Reference = P2;
+ValeurCmp = CONN_1;
+IdModule  = LOGO;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE461F6
+Path = /5AB7F846
+Reference = C1;
+ValeurCmp = .1u10v;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46207
+Path = /5AB7F93E
+Reference = C2;
+ValeurCmp = 1u10v;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46218
+Path = /5AB7F2CD
+Reference = C3;
+ValeurCmp = NOPOP;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46229
+Path = /5AB887AD
+Reference = C4;
+ValeurCmp = .1u10v;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE4623A
+Path = /5AB88738
+Reference = C5;
+ValeurCmp = 10u10v;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE4624B
+Path = /5AB836EA
+Reference = C6;
+ValeurCmp = 10u10v;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE4626F
+Path = /5AB7EFE3
+Reference = ESP1;
+ValeurCmp = ESP12E;
+IdModule  = ESP12E;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE462AE
+Path = /5AB8DE62
+Reference = J3;
+ValeurCmp = WS2813;
+IdModule  = Molex_KK-6410-04_04x2.54mm_Straight;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46383
+Path = /5AB7F135
+Reference = MK1;
+ValeurCmp = Microphone;
+IdModule  = CP_Radial_D10.0mm_P2.50mm_P5.00mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46394
+Path = /5ACF9363
+Reference = R1;
+ValeurCmp = 47k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE463A5
+Path = /5AB821D9
+Reference = R2;
+ValeurCmp = 4k7;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE463B6
+Path = /5AB8223F
+Reference = R3;
+ValeurCmp = 4k7;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE463C7
+Path = /5AB7F72C
+Reference = R4;
+ValeurCmp = 10k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE463D8
+Path = /5AB82386
+Reference = R5;
+ValeurCmp = 4k7;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE463ED
+Path = /5AB7F1F3
+Reference = U1;
+ValeurCmp = TLV70036;
+IdModule  = SOT-23-5_HandSoldering;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AE46402
+Path = /5AB85ADA
+Reference = U2;
+ValeurCmp = TLV70036;
+IdModule  = SOT-23-5_HandSoldering;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF611D8
+Path = /5AB8E8DD
+Reference = D1;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF611F1
+Path = /5AB92066
+Reference = D2;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF6120A
+Path = /5AB920E2
+Reference = D3;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF61223
+Path = /5AB9215D
+Reference = D4;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF6123C
+Path = /5AB921DD
+Reference = D6;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF61255
+Path = /5AB9225E
+Reference = D7;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF6126E
+Path = /5AB922EC
+Reference = D8;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF61287
+Path = /5AB92406
+Reference = D9;
+ValeurCmp = WS2813;
+IdModule  = WS2813;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF613B4
+Path = /5AB92DFC
+Reference = SW1;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF613C4
+Path = /5AB92D00
+Reference = SW2;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF613D4
+Path = /5AB92C56
+Reference = SW3;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF613E4
+Path = /5AB92BBC
+Reference = SW4;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF613F4
+Path = /5AB92B16
+Reference = SW5;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AF61404
+Path = /5AB828E8
+Reference = SW6;
+ValeurCmp = TACTILE;
+IdModule  = TACTILE10;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AC10330
+Path = /5AB88DA5
+Reference = J2;
+ValeurCmp = 5vdcIn;
+IdModule  = PJ-037A;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AC10348
+Path = /5AB88EAB
+Reference = P1;
+ValeurCmp = USBMicroB-10118194-0001LF;
+IdModule  = USB_Micro-B_10103594-0001LF;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AC10375
+Path = /5AB8D915
+Reference = D5;
+ValeurCmp = Schottky;
+IdModule  = DO-214AB;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AC10F0B
+Path = /5AB9CE2C
+Reference = R6;
+ValeurCmp = 1.5k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACAA5FF
+Path = 
+Reference = REF**;
+ValeurCmp = MountingHole_8.4mm_M8_Pad;
+IdModule  = Mounting_Holes:MountingHole_8.4mm_M8_Pad;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACD9F33
+Path = /5ABA356E
+Reference = J4;
+ValeurCmp = Conn_01x05;
+IdModule  = Molex_KK-6410-05_05x2.54mm_Straight;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AD66C5D
+Path = /5ACDBD00
+Reference = J1;
+ValeurCmp = Conn_01x03;
+IdModule  = 3.5mm_barrel_jack_MJ-3536N;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AD6738A
+Path = /5ACDCD59
+Reference = R7;
+ValeurCmp = NOPOP;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AD6739B
+Path = /5ACDCE14
+Reference = R8;
+ValeurCmp = NOPOP;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AD673AC
+Path = /5ACDCEC4
+Reference = R9;
+ValeurCmp = NOPOP;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACF8836
+Path = /5ACF99CE
+Reference = R10;
+ValeurCmp = 220k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACF8842
+Path = /5ACF948C
+Reference = R11;
+ValeurCmp = 10k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACF884E
+Path = /5ACF9DB3
+Reference = R12;
+ValeurCmp = 22k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACF885A
+Path = /5ACF9FA8
+Reference = R13;
+ValeurCmp = 47k;
+IdModule  = R_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 5ACF886C
+Path = /5ACF88F9
+Reference = U3;
+ValeurCmp = OPAMP_MCP6001T;
+IdModule  = SOT-23-5;
+EndCmp
+
+BeginCmp
+TimeStamp = 5AD975C9
+Path = /5AD9A98A
+Reference = C7;
+ValeurCmp = 10u;
+IdModule  = R_0805;
+EndCmp
+
+EndListe
