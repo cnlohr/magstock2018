@@ -25,7 +25,7 @@
 15;"SW1,SW2,SW3,SW4,SW5,SW6";"TACTILE10";6;"TACTILE";;;
 16;"J2";"PJ-037A";1;"5vdcIn";;;
 17;"P1";"USB_Micro-B_10103594-0001LF";1;"USBMicroB-10118194-0001LF";;;
-18;"D5";"DO-214AB";1;"Schottky";;;
+18;"D5";"DNP";1;"DNP";;;
 19;"R6";"R_0805";1;"1.5k";;;
 21;"J4";"Molex_KK-6410-05_05x2.54mm_Straight";1;"Conn_01x05";;;
 22;"J1";"3.5mm_barrel_jack_MJ-3536N";1;"Conn_01x03";;;
