@@ -126,32 +126,35 @@ int wf = 0;
 
 void ICACHE_FLASH_ATTR TransmitGenericEvent()
 {
-	uint8_t sendpack[64];
+	uint8_t sendpack[32];
 	ets_memcpy( sendpack, mymac, 6 );
 	sendpack[6] = 0x01;
-	sendpack[7] = wifi_station_get_rssi();
+	sendpack[7] = 0x03;
+	sendpack[8] = wifi_station_get_rssi();
 	{
 		struct station_config stationConf;
 		wifi_station_get_config(&stationConf);
-		ets_memcpy( sendpack+8, stationConf.bssid, 6 );
+		ets_memcpy( sendpack+9, stationConf.bssid, 6 );
 	}
-	sendpack[14] = LastGPIOState;
-	sendpack[15] = last_button_event_btn;
-	sendpack[16] = last_button_event_dn;
-	sendpack[17] = 0; //intensity (unimplemented)
-	sendpack[18] = status_update_count>>8;
-	sendpack[19] = status_update_count&0xff;
+	sendpack[15] = LastGPIOState;
+	sendpack[16] = last_button_event_btn;
+	sendpack[17] = last_button_event_dn;
+	sendpack[18] = 0; //voltage
+	sendpack[19] = 0; //voltage
+	sendpack[20] = 0; //sum power
+	sendpack[21] = status_update_count>>8;
+	sendpack[22] = status_update_count&0xff;
 	status_update_count++;
 	uint16_t heapfree = system_get_free_heap_size();
-	sendpack[20] = heapfree>>8;
-	sendpack[21] = heapfree&0xff;
-	sendpack[22] = 0;
-	sendpack[23] = 0;
+	sendpack[23] = heapfree>>8;
+	sendpack[24] = heapfree&0xff;
+	sendpack[25] = 0;
+	sendpack[26] = 0;
 	uint32_t cc = xthal_get_ccount();
-	sendpack[24] = cc>>24;
-	sendpack[25] = cc>>16;
-	sendpack[26] = cc>>8;
-	sendpack[27] = cc;
+	sendpack[27] = cc>>24;
+	sendpack[28] = cc>>16;
+	sendpack[29] = cc>>8;
+	sendpack[30] = cc;
 
 
 	if( got_an_ip )
@@ -161,7 +164,6 @@ void ICACHE_FLASH_ATTR TransmitGenericEvent()
 			pUdpServer->proto.udp->remote_port = send_back_on_port;
 			uint32_to_IP4(send_back_on_ip,pUdpServer->proto.udp->remote_ip);
 			send_back_on_ip = 0; send_back_on_port = 0;
-			printf( "Target resp\n" );
 			espconn_sendto( (struct espconn *)pUdpServer, sendpack, sizeof( sendpack ));
 		}
 		else
@@ -169,7 +171,6 @@ void ICACHE_FLASH_ATTR TransmitGenericEvent()
 			pUdpServer->proto.udp->remote_port = 8000;
 			uint32_to_IP4(REMOTE_IP_CODE,pUdpServer->proto.udp->remote_ip);  
 			udp_pending = UDP_TIMEOUT;
-			printf( "Inc send\n" );
 			espconn_sendto( (struct espconn *)pUdpServer, sendpack, sizeof( sendpack ));
 		}
 
@@ -321,7 +322,7 @@ static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned
 //	uint8_t ledout[] = { 0x00, 0xff, 0xaa, 0x00, 0xff, 0xaa, };
 	//uart0_sendStr("X");
 	//ws2812_push( pusrdata+3, len );
-	printf( "%02x\n", pusrdata[6] );
+	//printf( "%02x\n", pusrdata[6] );
 	if( pusrdata[6] == 0x11 )
 	{
 
@@ -329,14 +330,12 @@ static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned
 		send_back_on_port = ri->remote_port;
 
 		TransmitGenericEvent();
-		printf( "R\n" );
 	}
 	else if( pusrdata[6] == 0x02 )
 	{
 		ets_memcpy( ledOut, pusrdata + 7, len - 7 );
 		ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
 		ticks_since_override = 0;
-		printf( "R\n" );
 	}
 }
 
