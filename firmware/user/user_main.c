@@ -26,7 +26,7 @@
 #define SERVER_TIMEOUT 1500
 #define MAX_CONNS 5
 #define MAX_FRAME 2000
-#define TICKER_TIMEOUT 3000
+#define TICKER_TIMEOUT 100
 
 #define procTaskPrio        0
 #define procTaskQueueLen    1
@@ -102,7 +102,7 @@ void ICACHE_FLASH_ATTR user_rf_pre_init()
 static void NewFrame()
 {
 	if( !COLORCHORD_ACTIVE ) return;
-
+	if( ticks_since_override < TICKER_TIMEOUT ) return;
 	int i;
 	HandleFrameInfo();
 
