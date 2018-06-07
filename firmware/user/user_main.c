@@ -408,9 +408,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 		wifi_set_opmode_current( 0 );
 
 		ws2812_init();
-		memset( ledOut, 255, 3*8 );
+		memset( ledOut, 255, 3*20 );
 		uart0_sendStr( "Flashlight mode.\n" );
-		ws2812_push( ledOut, 3*8 ); //Buffersize = Nr LEDs * 3
+		ws2812_push( ledOut, 3*20 ); //Buffersize = Nr LEDs * 3
 		ets_delay_us(10000);
 
 		stop_i2s();
