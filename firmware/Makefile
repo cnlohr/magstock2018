@@ -10,6 +10,8 @@ include user.cfg
 SRCS += user/ws2812_i2s.c \
 	user/hpatimer.c \
 	user/adc.c \
+	user/ssid.c \
+	user/gpio_buttons.c \
 	../embeddedcommon/DFT32.c \
 	../embeddedcommon/embeddednf.c \
 	../embeddedcommon/embeddedout.c

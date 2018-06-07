@@ -22,7 +22,7 @@ struct SaveLoad
 
 struct CCSettings CCS;
 
-uint8_t gConfigDefaults[CONFIGURABLES] =  { 0, 6, 1, 2, 3, 4, 7, 4, 2, 80, 64, 12, 15, 5 /* Default LEDs */, 1, 0, 64 /* Initial amp */, 0 };
+uint8_t gConfigDefaults[CONFIGURABLES] =  { 0, 6, 1, 2, 3, 4, 7, 4, 2, 80, 64, 12, 15, 5 /* Default LEDs */, 1, 0, 20 /* Initial amp */, 0 };
 
 uint8_t * gConfigurables[CONFIGURABLES] = { &CCS.gROOT_NOTE_OFFSET, &CCS.gDFTIIR, &CCS.gFUZZ_IIR_BITS, &CCS.gFILTER_BLUR_PASSES,
 	&CCS.gSEMIBITSPERBIN, &CCS.gMAX_JUMP_DISTANCE, &CCS.gMAX_COMBINE_DISTANCE, &CCS.gAMP_1_IIR_BITS,
