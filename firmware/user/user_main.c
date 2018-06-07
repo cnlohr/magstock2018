@@ -18,15 +18,20 @@
 #include <commonservices.h>
 #include "ets_sys.h"
 #include "gpio.h"
+#include "gpio_buttons.h"
+
 //#define PROFILE
 
 #define PORT 7777
 #define SERVER_TIMEOUT 1500
 #define MAX_CONNS 5
 #define MAX_FRAME 2000
+#define TICKER_TIMEOUT 3000
 
 #define procTaskPrio        0
 #define procTaskQueueLen    1
+
+#define REMOTE_IP_CODE 0x0a00c90a // = 10.201.0.10
 
 struct CCSettings CCS;
 static volatile os_timer_t some_timer;
@@ -42,6 +47,12 @@ uint16_t soundtail;
 static uint8_t hpa_running = 0;
 static uint8_t hpa_is_paused_for_wifi;
 
+#define UDP_TIMEOUT 50
+
+int send_back_on_ip = 0;
+int send_back_on_port = 0;
+int udp_pending;
+int status_update_count;
 int got_an_ip = 0;
 int soft_ap_mode = 0;
 int wifi_fails;
@@ -112,11 +123,65 @@ os_event_t    procTaskQueue[procTaskQueueLen];
 uint32_t samp_iir = 0;
 int wf = 0;
 
-//Tasks that happen all the time.
 
-static void procTask(os_event_t *events)
+void ICACHE_FLASH_ATTR TransmitGenericEvent()
 {
-	system_os_post(procTaskPrio, 0, 0 );
+	uint8_t sendpack[64];
+	ets_memcpy( sendpack, mymac, 6 );
+	sendpack[6] = 0x01;
+	sendpack[7] = wifi_station_get_rssi();
+	{
+		struct station_config stationConf;
+		wifi_station_get_config(&stationConf);
+		ets_memcpy( sendpack+8, stationConf.bssid, 6 );
+	}
+	sendpack[14] = LastGPIOState;
+	sendpack[15] = last_button_event_btn;
+	sendpack[16] = last_button_event_dn;
+	sendpack[17] = 0; //intensity (unimplemented)
+	sendpack[18] = status_update_count>>8;
+	sendpack[19] = status_update_count&0xff;
+	status_update_count++;
+	uint16_t heapfree = system_get_free_heap_size();
+	sendpack[20] = heapfree>>8;
+	sendpack[21] = heapfree&0xff;
+	sendpack[22] = 0;
+	sendpack[23] = 0;
+	uint32_t cc = xthal_get_ccount();
+	sendpack[24] = cc>>24;
+	sendpack[25] = cc>>16;
+	sendpack[26] = cc>>8;
+	sendpack[27] = cc;
+
+
+	if( got_an_ip )
+	{
+		if( send_back_on_ip && send_back_on_port )
+		{
+			pUdpServer->proto.udp->remote_port = send_back_on_port;
+			uint32_to_IP4(send_back_on_ip,pUdpServer->proto.udp->remote_ip);
+			send_back_on_ip = 0; send_back_on_port = 0;
+			printf( "Target resp\n" );
+			espconn_sendto( (struct espconn *)pUdpServer, sendpack, sizeof( sendpack ));
+		}
+		else
+		{
+			pUdpServer->proto.udp->remote_port = 8000;
+			uint32_to_IP4(REMOTE_IP_CODE,pUdpServer->proto.udp->remote_ip);  
+			udp_pending = UDP_TIMEOUT;
+			printf( "Inc send\n" );
+			espconn_sendto( (struct espconn *)pUdpServer, sendpack, sizeof( sendpack ));
+		}
+
+	}
+
+	last_button_event_btn = 0;
+	last_button_event_dn = 0;
+}
+
+//Tasks that happen all the time.
+void  ICACHE_FLASH_ATTR RETick()
+{
 
 	if( COLORCHORD_ACTIVE && !hpa_running )
 	{
@@ -130,6 +195,23 @@ static void procTask(os_event_t *events)
 		hpa_running = 0;
 	}
 	
+
+	CSTick( 0 );
+
+	//Send button press events.
+	if( last_button_event_btn || udp_pending == 0 )
+	{
+		TransmitGenericEvent();
+	}
+
+}
+
+void (*retick)();
+
+static void procTask(os_event_t *events)
+{
+	system_os_post(procTaskPrio, 0, 0 );
+
 	//For profiling so we can see how much CPU is spent in this loop.
 #ifdef PROFILE
 	WRITE_PERI_REG( PERIPHS_GPIO_BASEADDR + GPIO_ID_PIN(0), 1 );
@@ -156,7 +238,8 @@ static void procTask(os_event_t *events)
 
 	if( events->sig == 0 && events->par == 0 )
 	{
-		CSTick( 0 );
+		if( !retick ) retick = RETick;
+		retick();
 	}
 
 }
@@ -166,7 +249,9 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 {
 	CSTick( 1 );
 
-	if( ticks_since_override < 30 )
+	if( udp_pending ) udp_pending --;
+
+	if( ticks_since_override < TICKER_TIMEOUT )
 	{
 		//Color override?
 		ticks_since_override++;
@@ -228,10 +313,31 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned short len)
 {
 	struct espconn *pespconn = (struct espconn *)arg;
+
+	remot_info * ri = 0;
+	espconn_get_connection_info( pespconn, &ri, 0);
+
 //	uint8_t buffer[MAX_FRAME];
 //	uint8_t ledout[] = { 0x00, 0xff, 0xaa, 0x00, 0xff, 0xaa, };
-	uart0_sendStr("X");
-	ws2812_push( pusrdata+3, len );
+	//uart0_sendStr("X");
+	//ws2812_push( pusrdata+3, len );
+	printf( "%02x\n", pusrdata[6] );
+	if( pusrdata[6] == 0x11 )
+	{
+
+		send_back_on_ip = IP4_to_uint32(ri->remote_ip);
+		send_back_on_port = ri->remote_port;
+
+		TransmitGenericEvent();
+		printf( "R\n" );
+	}
+	else if( pusrdata[6] == 0x02 )
+	{
+		ets_memcpy( ledOut, pusrdata + 7, len - 7 );
+		ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
+		ticks_since_override = 0;
+		printf( "R\n" );
+	}
 }
 
 void ICACHE_FLASH_ATTR charrx( uint8_t c )
@@ -299,9 +405,10 @@ void ICACHE_FLASH_ATTR user_init(void)
 	espconn_create( pUdpServer );
 	pUdpServer->type = ESPCONN_UDP;
 	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
-	pUdpServer->proto.udp->local_port = 7777;
+	pUdpServer->proto.udp->local_port = 8001;
+	pUdpServer->proto.udp->remote_port = 8000;
+	uint32_to_IP4(REMOTE_IP_CODE,pUdpServer->proto.udp->remote_ip); 
 	espconn_regist_recvcb(pUdpServer, udpserver_recv);
-
 	if( espconn_create( pUdpServer ) )
 	{
 		while(1) { uart0_sendStr( "\r\nFAULT\r\n" ); }
