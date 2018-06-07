@@ -400,12 +400,26 @@ void ICACHE_FLASH_ATTR user_init(void)
 	//if( firstbuttons & 0x20 ) disable_deep_sleep = 1;
 
 	//Can't use buttons 0, 1, or 5 for startup options.
+	//0x04 will be flashlight mode.
+	//0x08 will be to restore default colorchord settings.
+
 	if( (firstbuttons & 0x04) )
 	{
-	}
-	if( (firstbuttons & 0x08) )
-	{
+		wifi_set_opmode_current( 0 );
+
+		ws2812_init();
+		memset( ledOut, 255, 3*8 );
 		uart0_sendStr( "Flashlight mode.\n" );
+		ws2812_push( ledOut, 3*8 ); //Buffersize = Nr LEDs * 3
+		ets_delay_us(10000);
+
+		stop_i2s();
+
+		while(1)
+		{
+			ets_delay_us(100000);
+			system_soft_wdt_feed();
+		}
 	}
 	if( (firstbuttons & 0x10) )
 	{
@@ -445,6 +459,16 @@ void ICACHE_FLASH_ATTR user_init(void)
 	{
 		while(1) { uart0_sendStr( "\r\nFAULT\r\n" ); }
 	}
+
+
+
+	if( (firstbuttons & 0x08) )
+	{
+		//Restore all settings to 
+		uart0_sendStr( "Restore and save defaults (except # of leds).\n" );
+		RevertAndSaveAllSettingsExceptLEDs();
+	}
+
 
 	CSInit();
 
@@ -486,6 +510,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 	// see peripherals https://espressif.com/en/support/explore/faq
 	//wifi_set_sleep_type(NONE_SLEEP_T); // on its own stopped wifi working
 	//wifi_fpm_set_sleep_type(NONE_SLEEP_T); // with this seemed no difference
+
 
 	memset( ledOut, 255, 3 );
 	ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );

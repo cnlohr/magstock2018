@@ -60,6 +60,43 @@ void ICACHE_FLASH_ATTR CustomStart( )
 	}
 }
 
+void ICACHE_FLASH_ATTR SaveSettings()
+{
+	int i;
+	for( i = 0; i < CONFIGURABLES-1; i++ )
+	{
+		if( gConfigurables[i] )
+			settings.configs[i] = *gConfigurables[i];
+	}
+	settings.SaveLoadKey = 0xAA;
+
+	EnterCritical();
+	ets_intr_lock();
+	spi_flash_erase_sector( 0x3D000/4096 );
+	spi_flash_write( 0x3D000, (uint32*)&settings, ((sizeof( settings )-1)&(~0xf))+0x10 );
+	ets_intr_unlock();
+	ExitCritical();
+
+}
+
+void ICACHE_FLASH_ATTR RevertAndSaveAllSettingsExceptLEDs()
+{
+	int i;
+	printf( "Restoring all values.\n" );
+	int led = CCS.gUSE_NUM_LIN_LEDS;
+	if( led == 0 ) led = 5;
+	for( i = 0; i < CONFIGURABLES; i++ )
+	{
+		if( gConfigurables[i] )
+		{
+			*gConfigurables[i] = gConfigDefaults[i];
+		}
+	}
+	CCS.gUSE_NUM_LIN_LEDS = led;
+	SaveSettings();
+}
+
+
 int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, unsigned short len)
 {
 	char * buffend = buffer;
@@ -191,21 +228,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 
 		case 's': case 'S':
 		{
-			int i;
-
-			for( i = 0; i < CONFIGURABLES-1; i++ )
-			{
-				if( gConfigurables[i] )
-					settings.configs[i] = *gConfigurables[i];
-			}
-			settings.SaveLoadKey = 0xAA;
-
-			EnterCritical();
-			ets_intr_lock();
-			spi_flash_erase_sector( 0x3D000/4096 );
-			spi_flash_write( 0x3D000, (uint32*)&settings, ((sizeof( settings )-1)&(~0xf))+0x10 );
-			ets_intr_unlock();
-			ExitCritical();
+			SaveSettings();
 
 			buffend += ets_sprintf( buffend, "CS" );
 			return buffend-buffer;
