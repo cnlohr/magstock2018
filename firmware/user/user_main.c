@@ -45,6 +45,7 @@ static uint8_t hpa_is_paused_for_wifi;
 int got_an_ip = 0;
 int soft_ap_mode = 0;
 int wifi_fails;
+int ticks_since_override = 1000000;
 uint8_t mymac[6];
 
 uint8_t last_button_event_btn;
@@ -165,13 +166,17 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 {
 	CSTick( 1 );
 
-	if( hpa_is_paused_for_wifi && printed_ip )
+	if( ticks_since_override < 30 )
+	{
+		//Color override?
+		ticks_since_override++;
+	}
+	else if( hpa_is_paused_for_wifi && printed_ip )
 	{
 		StartHPATimer(); //Init the high speed  ADC timer.
 		hpa_running = 1;
 		hpa_is_paused_for_wifi = 0; // only need to do once prevents unstable ADC
 	}
-
 
 	{
 		struct station_config wcfg;
@@ -181,16 +186,20 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 			wifi_station_disconnect();
 			wifi_fails++;
 			printf( "Connection failed with code %d... Retrying, try: %d", stat, wifi_fails );
-			wifi_station_connect();
 			printf("\n");
-			if( wifi_fails == 4 )
+			if( wifi_fails == 2 )
 			{
 				SwitchToSoftAP();
 				got_an_ip = 1;
+				printed_ip = 1;
+			}
+			else
+			{
+				wifi_station_connect();
+				got_an_ip = 0;
 			}
 			memset(  ledOut + wifi_fails*3, 255, 3 );
 			ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
-			got_an_ip = 0;
 		} else if( stat == STATION_GOT_IP && !got_an_ip ) {
 			wifi_station_get_config( &wcfg );
 			wifi_get_ip_info(0, &ipi);
