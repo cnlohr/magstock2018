@@ -141,7 +141,7 @@ void ICACHE_FLASH_ATTR TransmitGenericEvent()
 	sendpack[17] = last_button_event_dn;
 	sendpack[18] = 0; //voltage
 	sendpack[19] = 0; //voltage
-	sendpack[20] = 0; //sum power
+	sendpack[20] = USE_NUM_LIN_LEDS; //sum power
 	sendpack[21] = status_update_count>>8;
 	sendpack[22] = status_update_count&0xff;
 	status_update_count++;
@@ -331,11 +331,35 @@ static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned
 
 		TransmitGenericEvent();
 	}
+	if( pusrdata[6] == 0x13 )
+	{
+		uint8_t ledret[USE_NUM_LIN_LEDS*3+6+2];
+		ets_memcpy( ledret, mymac, 6 );
+		ledret[6] = 0x14;
+		ledret[7] = USE_NUM_LIN_LEDS;
+		ets_memcpy( ledret, ledOut, USE_NUM_LIN_LEDS*3 );
+
+		//Request LEDs
+		send_back_on_ip = IP4_to_uint32(ri->remote_ip);
+		send_back_on_port = ri->remote_port;
+
+		pUdpServer->proto.udp->remote_port = send_back_on_port;
+		uint32_to_IP4(send_back_on_ip,pUdpServer->proto.udp->remote_ip);
+		send_back_on_ip = 0; send_back_on_port = 0;
+		espconn_sendto( (struct espconn *)pUdpServer, ledret, sizeof( ledret ));
+
+
+		TransmitGenericEvent();
+	}
 	else if( pusrdata[6] == 0x02 )
 	{
-		ets_memcpy( ledOut, pusrdata + 7, len - 7 );
-		ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
-		ticks_since_override = 0;
+		if (! ((mymac[5] ^ pusrdata[7])&pusrdata[8]) )
+		{
+			ets_memcpy( ledOut, pusrdata + 10, len - 10 );
+			ws2812_push( ledOut, 255 * 3 );
+			ticks_since_override = 0;
+		}
+
 	}
 }
 
@@ -374,6 +398,15 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	int firstbuttons = GetButtons();
 	//if( firstbuttons & 0x20 ) disable_deep_sleep = 1;
+
+	//Can't use buttons 0, 1, or 5 for startup options.
+	if( (firstbuttons & 0x04) )
+	{
+	}
+	if( (firstbuttons & 0x08) )
+	{
+		uart0_sendStr( "Flashlight mode.\n" );
+	}
 	if( (firstbuttons & 0x10) )
 	{
 		SwitchToSoftAP( 0 );
