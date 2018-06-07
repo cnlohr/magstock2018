@@ -50,38 +50,41 @@ uint16_t soundtail;
 static uint8_t hpa_running = 0;
 static uint8_t hpa_is_paused_for_wifi;
 
-
-
-int soft_ap_mode = 0;
-int udp_pending = 0; //If nonzero, do not attempt to send UDP packet. 
 int got_an_ip = 0;
-int wifi_fails = 0;
-
-uint32_t force_sleep_time = 0;
-int need_to_do_scan = 0;
-
-uint32_t last_ccount;
-uint32_t scan_ccount;
-int ledqtybytes = 12;
-int do_led_push;
-
-uint32_t frame = 0;
+int soft_ap_mode = 0;
+int wifi_fails;
 uint8_t mymac[6];
 
+uint8_t last_button_event_btn;
+uint8_t last_button_event_dn;
 
-uint8_t mypacket[30+200] = {  //256 = max size of additional payload
-	0x08, //Frame type, 0x80 = beacon, Tried data, but seems to have been filtered on RX side by other ESP
-	0x00, 0x00, 0x00, 
-	0xff,0xff,0xff,0xff,0xff,0xff,
-	0xff,0xff,0xff,0xff,0xff,0xff,
-	0xff,0xff,0xff,0xff,0xff,0xff,
-	0x00, 0x00,  //Sequence number, cleared by espressif
-	0x82, 0x66,	 //"Mysterious OLPC stuff"
-	0x82, 0x66, 0x00, 0x00, //????
-};
-#define PACK_PAYLOAD_START 30
-unsigned packet_tx_time; //UNUSED IN THIS FIRMWARE.
-#define DISABLE_RAW_PACKET_ACCESS
+
+
+static int ICACHE_FLASH_ATTR SwitchToSoftAP( )
+{
+	struct softap_config c;
+	wifi_softap_get_config_default(&c);
+	memcpy( c.ssid, "MAGBADGE_", 9 );
+	wifi_get_macaddr(SOFTAP_IF, mymac);
+	ets_sprintf( c.ssid+9, "%02x%02x%02x", mymac[3],mymac[4],mymac[5] ); 
+	c.password[0] = 0;
+	c.ssid_len = ets_strlen( c.ssid );
+	c.channel = 1;
+	c.authmode = NULL_MODE;
+	c.ssid_hidden = 0;
+	c.max_connection = 4;
+	c.beacon_interval = 1000;
+	wifi_softap_set_config(&c);
+	wifi_softap_set_config_current(&c);
+	wifi_set_opmode_current( 2 );
+	wifi_softap_set_config_current(&c);
+	wifi_set_channel( c.channel );	
+	printf( "Making it a softap, channel %d\n", c.channel );
+	got_an_ip = 1;
+	soft_ap_mode = 1;
+	return c.channel;
+}
+
 
 
 void ICACHE_FLASH_ATTR CustomStart( );
@@ -819,7 +822,43 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 		hpa_running = 1;
 		hpa_is_paused_for_wifi = 0; // only need to do once prevents unstable ADC
 	}
-	uart0_sendStr(".");
+
+
+	{
+		struct station_config wcfg;
+		struct ip_info ipi;
+		int stat = wifi_station_get_connect_status();
+		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
+			wifi_station_disconnect();
+			wifi_fails++;
+			printf( "Connection failed with code %d... Retrying, try: %d", stat, wifi_fails );
+			wifi_station_connect();
+			printf("\n");
+			if( wifi_fails == 4 )
+			{
+				SwitchToSoftAP();
+				got_an_ip = 1;
+			}
+			memset(  ledOut + wifi_fails*3, 255, 3 );
+			ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
+			got_an_ip = 0;
+		} else if( stat == STATION_GOT_IP && !got_an_ip ) {
+			wifi_station_get_config( &wcfg );
+			wifi_get_ip_info(0, &ipi);
+			printf( "STAT: %d\n", stat );
+			#define chop_ip(x) (((x)>>0)&0xff), (((x)>>8)&0xff), (((x)>>16)&0xff), (((x)>>24)&0xff)
+			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
+			printf( "NM: %d.%d.%d.%d\n", chop_ip(ipi.netmask.addr) );
+			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
+			printf( "Connected to: /%s/\n"  , wcfg.ssid );
+			got_an_ip = 1;
+			wifi_fails = 0;
+		}
+	}
+
+
+
+//	uart0_sendStr(".");
 //	printf( "%d/%d\n",soundtail,soundhead );
 //	printf( "%d/%d\n",soundtail,soundhead );
 //	uint8_t ledout[] = { 0x00, 0xff, 0xaa, 0x00, 0xff, 0xaa, };
@@ -988,6 +1027,16 @@ void ICACHE_FLASH_ATTR charrx( uint8_t c )
 }
 
 
+ 
+void ICACHE_FLASH_ATTR HandleButtonEvent( uint8_t stat, int btn, int down )
+{
+	//XXX WOULD BE NICE: Implement some sort of event queue.
+	last_button_event_btn = btn+1;
+	last_button_event_dn = down;
+	system_os_post(0, 0, 0 );
+}
+
+
 void ICACHE_FLASH_ATTR user_init(void)
 {
 	wifi_fails = 1;  //Tricky if just booting, like from a wakeup, only look once for an AP, otherwise fail.
@@ -1055,6 +1104,32 @@ void ICACHE_FLASH_ATTR user_init(void)
 	#error Profiling no allowed on MAGStock swadge.
 	GPIO_OUTPUT_SET(GPIO_ID_PIN(0), 0);
 #endif
+	SetupGPIO();
+
+	int firstbuttons = GetButtons();
+	//if( firstbuttons & 0x20 ) disable_deep_sleep = 1;
+	if( (firstbuttons & 0x10) )
+	{
+		SwitchToSoftAP( 0 );
+		uart0_sendStr( "Booting in SoftAP\n" );
+	}
+	else
+	{
+		struct station_config stationConf;
+		wifi_station_get_config(&stationConf);
+		wifi_get_macaddr(STATION_IF, mymac);
+		uart0_sendStr( "Connecting to infrastructure\n" );
+		LoadSSIDAndPassword( stationConf.ssid, stationConf.password );
+		stationConf.bssid_set = 0;
+		wifi_set_opmode_current( 1 );
+		wifi_set_opmode( 1 );
+		wifi_station_set_config(&stationConf);
+		wifi_station_connect();
+		wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
+		soft_ap_mode = 0;
+	}
+
+ 
 
 	CSPreInit();
 
@@ -1123,6 +1198,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 	// see peripherals https://espressif.com/en/support/explore/faq
 	//wifi_set_sleep_type(NONE_SLEEP_T); // on its own stopped wifi working
 	//wifi_fpm_set_sleep_type(NONE_SLEEP_T); // with this seemed no difference
+
+	memset( ledOut, 255, 3 );
+	ws2812_push( ledOut, USE_NUM_LIN_LEDS * 3 );
 
 	system_os_post(procTaskPrio, 0, 0 );
 }

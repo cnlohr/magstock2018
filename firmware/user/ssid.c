@@ -8,3 +8,4 @@ void ICACHE_FLASH_ATTR LoadSSIDAndPassword( char * ssid, char * password )
 	ets_memcpy( password, "testpass", 9 );
 }
 
+

@@ -56,7 +56,7 @@ void ICACHE_FLASH_ATTR SetupGPIO()
 }
 
 
-uint8_t GetButtons()
+uint8_t ICACHE_FLASH_ATTR GetButtons()
 {
 	uint8_t ret = 0;
 	int i;
@@ -70,6 +70,7 @@ uint8_t GetButtons()
 	ret ^= ~32; //GPIO15's logic is inverted.  Don't flip it but flip everything else.
 	return ret;
 }
+
 
 
 
