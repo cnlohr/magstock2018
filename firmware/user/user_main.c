@@ -23,8 +23,9 @@
 
 int in_modem_only_mode;
 
-#define REMOTE_IP_CODE 0x0a00c90a // = 10.201.0.10
+//#define SWADGE
 
+#define REMOTE_IP_CODE 0x0a00c90a // = 10.201.0.10
 
 #define SERVER_TIMEOUT 1500
 #define MAX_CONNS 5
@@ -90,6 +91,14 @@ void ICACHE_FLASH_ATTR user_rf_pre_init()
 }
 
 
+//Tasks that happen all the time.
+os_event_t    procTaskQueue[procTaskQueueLen];
+
+
+#ifdef SWADGE
+
+
+
 
 #define UDP_TIMEOUT 500000  //0.5 seconds.
 
@@ -119,10 +128,8 @@ uint8_t last_button_event_dn;
 
 static uint8_t global_scan_complete = 0;
 static uint8_t global_scan_elements = 0;
-static uint8_t global_scan_data[2048];  //Where SSID, channel, power go.
+static uint8_t global_scan_data[1024];  //Where SSID, channel, power go.
 int force_channel = 0; //for SoftAP mode.
-
-
 
 
 static int ICACHE_FLASH_ATTR SwitchToSoftAP( int chadvance )
@@ -185,16 +192,10 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 		gsp+=6;
 		*(gsp++) = inf->rssi;
 		*(gsp++) = inf->channel;
-		if( gsp - global_scan_data >= 2040 ) break;
+		if( gsp - global_scan_data >= sizeof(global_scan_data)-8 ) break;
 	}
 	global_scan_complete = 1;
 }
-
-
-//Tasks that happen all the time.
-os_event_t    procTaskQueue[procTaskQueueLen];
-
-
 
 uint32_t ICACHE_FLASH_ATTR lEHSVtoHEX( uint8_t hue, uint8_t sat, uint8_t val )
 {
@@ -725,6 +726,9 @@ end:
 }
 
 
+#endif
+
+
 //Call this once we've stacked together one full colorchord frame.
 static void NewFrame()
 {
@@ -756,7 +760,7 @@ void ICACHE_FLASH_ATTR procTask2(os_event_t *events)
 	if( events->sig == 0 && events->par == 0 )
 	{
 		CSTick( 0 );
-		procTaskDeep();
+		//procTaskDeep();
 	}
 }
 
@@ -823,6 +827,7 @@ static void ICACHE_FLASH_ATTR myTimer(void *arg)
 }
 
 
+#ifdef SWADGE
 
 void ICACHE_FLASH_ATTR HandleButtonEvent( uint8_t stat, int btn, int down )
 {
@@ -964,6 +969,13 @@ static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned
 	ProcessData( pusrdata, len );
 }
 
+#else 
+static void ICACHE_FLASH_ATTR udpserver_recv(void *arg, char *pusrdata, unsigned short len)
+{
+	printf( "UDP\n" );
+}
+
+#endif
 
 //	uint8_t buffer[MAX_FRAME];
 //	uint8_t ledout[] = { 0x00, 0xff, 0xaa, 0x00, 0xff, 0xaa, };
@@ -983,16 +995,20 @@ void ICACHE_FLASH_ATTR user_init(void)
 #ifndef DISABLE_RAW_PACKET_ACCESS
 	debugcontrol = 0xffffffff;
 #endif
+	//Uncomment this to force a system restore.
+	system_restore();
+
+#ifdef SWADGE
 	rainbow_run = 500000;
 	rainbow_intensity = 30;
 	rainbow_speed = 10;
 	rainbow_offset = 30;
-
+#endif
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
-	int wifiMode = wifi_get_opmode();
 
 	uart0_sendStr("\r\nMAGStock2018\r\n");
-	uart0_sendStr("\r\nMAGStock2018\r\n");
+
+#ifdef SWADGE
 	SetupGPIO();
 
 
@@ -1026,10 +1042,10 @@ void ICACHE_FLASH_ATTR user_init(void)
 		ledOut[9] = 0; ledOut[10] = 1; ledOut[11] = 0;
 		soft_ap_mode = 0;
 	}
+
+#endif
 	uart0_sendStr( "Continuing boot.\n" );
 
-//Uncomment this to force a system restore.
-//	system_restore();
 
 	CustomStart();
 
